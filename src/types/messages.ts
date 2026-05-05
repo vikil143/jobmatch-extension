@@ -1,2 +1,6 @@
-// Phase 2: Message union types for chrome.runtime messaging
-export {}
+import type { JobPosting } from './jobs'
+
+export type ExtensionMessage =
+  | { type: 'JD_EXTRACTED'; payload: JobPosting }
+  | { type: 'GET_CURRENT_JD' }
+  | { type: 'CURRENT_JD'; payload: JobPosting | null }

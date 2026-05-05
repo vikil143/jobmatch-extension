@@ -1,2 +1,8 @@
-// Phase 2: JobListing and MatchResult types
-export {}
+export interface JobPosting {
+  site: 'linkedin' | 'naukri'
+  title: string
+  company: string
+  description: string
+  url: string
+  extractedAt: number
+}

@@ -38,6 +38,9 @@ export default defineConfig({
     crx({ manifest }),
     fixServiceWorkerLoader(),
   ],
+  optimizeDeps: {
+    exclude: ['pdfjs-dist'],
+  },
   server: {
     port: 5173,
     strictPort: true,

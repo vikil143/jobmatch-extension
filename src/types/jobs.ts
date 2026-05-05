@@ -6,3 +6,12 @@ export interface JobPosting {
   url: string
   extractedAt: number
 }
+
+export interface MatchResult {
+  score: number
+  skillCoverage: number
+  keywordOverlap: number
+  matchedSkills: string[]
+  missingSkills: string[]
+  extraSkills: string[]
+}

@@ -1,6 +1,6 @@
 import { defineManifest } from '@crxjs/vite-plugin'
 
-export default defineManifest({
+export default defineManifest((env) => ({
   manifest_version: 3,
   name: 'JobMatch',
   version: '0.1.0',
@@ -40,4 +40,12 @@ export default defineManifest({
     '48': 'icons/icon48.png',
     '128': 'icons/icon128.png',
   },
-})
+  // MV3 default CSP doesn't declare worker-src, which blocks pdfjs-dist's
+  // module worker ({type:"module"}). Explicitly allow self + blob:.
+  // In dev mode also allow localhost so @crxjs HMR works.
+  content_security_policy: {
+    extension_pages: env.mode === 'development'
+      ? "script-src 'self' http://localhost:5173; worker-src 'self' http://localhost:5173; object-src 'self'"
+      : "script-src 'self'; worker-src 'self'; object-src 'self'",
+  },
+}))

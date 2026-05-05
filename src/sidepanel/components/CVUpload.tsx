@@ -39,12 +39,15 @@ export default function CVUpload() {
     setStatus('parsing')
     setError('')
     try {
+      console.log('Parsing PDF:', file.name)
+      console.log('File size:', file.size, 'bytes')
       const text = await parsePdfToText(file)
       const record = { filename: file.name, text, parsedAt: Date.now() }
       await cvStorage.set(record)
       setCv(record)
       setStatus('done')
     } catch (err) {
+      console.error('Error parsing PDF:', err)
       setError(err instanceof Error ? err.message : 'Failed to parse PDF.')
       setStatus('error')
     }

@@ -42,10 +42,11 @@ export default defineConfig({
     exclude: ['pdfjs-dist'],
   },
   server: {
+    cors: true,
+    // Chrome blocks SW requests to localhost without this header.
+    headers: { 'Access-Control-Allow-Origin': '*' },
     port: 5173,
     strictPort: true,
-    hmr: {
-      port: 5173,
-    },
+    hmr: { port: 5173 },
   },
 })

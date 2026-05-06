@@ -39,7 +39,12 @@ export default defineConfig({
     fixServiceWorkerLoader(),
   ],
   optimizeDeps: {
-    exclude: ['pdfjs-dist'],
+    // pdfjs-dist uses dynamic require; @huggingface/transformers uses ESM
+    // dynamic imports that Vite's pre-bundler breaks.
+    exclude: ['pdfjs-dist', '@huggingface/transformers'],
+  },
+  worker: {
+    format: 'es',
   },
   server: {
     cors: true,

@@ -3,6 +3,16 @@ import { tokenize } from './tokenizer'
 import { termFrequency, cosineSimilarity } from './tfidf'
 import type { MatchResult } from '../../types/jobs'
 
+// Blends a semantic similarity score into an existing TF-cosine result.
+// Weight shift: skills 40 %, TF-cosine 20 %, semantic 40 %.
+export function blendSemanticScore(base: MatchResult, semSim: number): MatchResult {
+  return {
+    ...base,
+    score: Math.round(40 * base.skillCoverage + 20 * base.keywordOverlap + 40 * semSim),
+    semanticScore: semSim,
+  }
+}
+
 export function computeMatch(cv: string, jd: string): MatchResult {
   const cvSkills = extractSkills(cv)
   const jdSkills = extractSkills(jd)

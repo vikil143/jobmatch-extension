@@ -10,7 +10,8 @@ export interface JobPosting {
 export interface MatchResult {
   score: number
   skillCoverage: number
-  keywordOverlap: number
+  keywordOverlap: number   // TF-cosine similarity
+  semanticScore?: number   // embedding cosine; absent until the model resolves
   matchedSkills: string[]
   missingSkills: string[]
   extraSkills: string[]

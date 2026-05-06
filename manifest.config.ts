@@ -43,9 +43,11 @@ export default defineManifest((env) => ({
   // MV3 default CSP doesn't declare worker-src, which blocks pdfjs-dist's
   // module worker ({type:"module"}). Explicitly allow self + blob:.
   // In dev mode also allow localhost so @crxjs HMR works.
+  // wasm-unsafe-eval is required for onnxruntime-web (used by transformers.js).
+  // Chrome 95+ supports this directive; it's the MV3-safe alternative to unsafe-eval.
   content_security_policy: {
     extension_pages: env.mode === 'development'
-      ? "script-src 'self' http://localhost:5173; worker-src 'self' http://localhost:5173; object-src 'self'"
-      : "script-src 'self'; worker-src 'self'; object-src 'self'",
+      ? "script-src 'self' 'wasm-unsafe-eval' http://localhost:5173; worker-src 'self' http://localhost:5173; object-src 'self'"
+      : "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'self'",
   },
 }))

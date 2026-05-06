@@ -2,6 +2,8 @@ interface Props {
   score: number
   skillCoverage?: number
   keywordOverlap?: number
+  semanticScore?: number
+  semanticLoading?: boolean
 }
 
 function scoreColor(score: number): { text: string; bar: string; track: string; label: string } {
@@ -10,7 +12,7 @@ function scoreColor(score: number): { text: string; bar: string; track: string; 
   return { text: 'text-rose-400', bar: 'bg-rose-600', track: 'bg-rose-950', label: 'Weak match' }
 }
 
-export default function MatchScore({ score, skillCoverage, keywordOverlap }: Props) {
+export default function MatchScore({ score, skillCoverage, keywordOverlap, semanticScore, semanticLoading }: Props) {
   const colors = scoreColor(score)
   const pct = Math.min(100, Math.max(0, score))
 
@@ -32,6 +34,26 @@ export default function MatchScore({ score, skillCoverage, keywordOverlap }: Pro
         />
       </div>
 
+      {/* Method badge — shows which scoring mode produced this result */}
+      <div className="flex items-center gap-1">
+        {semanticLoading ? (
+          <>
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
+            <span className="text-[10px] text-gray-600">loading semantic model…</span>
+          </>
+        ) : semanticScore !== undefined ? (
+          <>
+            <div className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+            <span className="text-[10px] text-sky-600">semantic</span>
+          </>
+        ) : (
+          <>
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-700" />
+            <span className="text-[10px] text-gray-600">tf-idf</span>
+          </>
+        )}
+      </div>
+
       {(skillCoverage !== undefined || keywordOverlap !== undefined) && (
         <div className="mt-2 flex gap-6 text-center">
           {skillCoverage !== undefined && (
@@ -48,6 +70,14 @@ export default function MatchScore({ score, skillCoverage, keywordOverlap }: Pro
                 {Math.round(keywordOverlap * 100)}%
               </p>
               <p className="text-[10px] text-gray-600">keyword overlap</p>
+            </div>
+          )}
+          {semanticScore !== undefined && (
+            <div>
+              <p className="font-mono text-sm font-semibold text-sky-400 tabular-nums">
+                {Math.round(semanticScore * 100)}%
+              </p>
+              <p className="text-[10px] text-gray-600">semantic sim</p>
             </div>
           )}
         </div>

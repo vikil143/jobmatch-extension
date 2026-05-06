@@ -6,7 +6,8 @@ import SkillGap from './components/SkillGap'
 import History from './components/History'
 import SettingsDrawer from './components/SettingsDrawer'
 import Welcome from './components/Welcome'
-import { computeMatch } from '../lib/matching/match'
+import { computeMatch, blendSemanticScore } from '../lib/matching/match'
+import { getSemanticSimilarity } from '../lib/matching/semantic'
 import { cvStorage, historyStorage } from '../lib/storage'
 import type { JobPosting } from '../types/jobs'
 import type { ExtensionMessage } from '../types/messages'
@@ -32,6 +33,9 @@ export default function App() {
   const [manualJdText, setManualJdText] = useState('')
   const [tab, setTab] = useState<Tab>('match')
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Semantic similarity from the worker — undefined = in-flight, null = failed/N/A.
+  const [semanticSim, setSemanticSim] = useState<number | null | undefined>(undefined)
 
   // Check first-run state
   useEffect(() => {
@@ -83,21 +87,47 @@ export default function App() {
   // The effective JD description: extracted JD takes priority, then manual paste
   const jdDescription = jd?.description ?? (manualJdText.trim().length > 50 ? manualJdText.trim() : null)
 
-  const match = useMemo(() => {
+  // Synchronous TF-cosine result — shown immediately while semantic loads.
+  const baseMatch = useMemo(() => {
     if (!cvText || !jdDescription) return null
     return computeMatch(cvText, jdDescription)
   }, [cvText, jdDescription])
 
-  // Persist match to history when a real extracted JD is matched
+  // Kick off semantic embedding in the background worker whenever inputs change.
+  // Falls back silently: if the worker fails, semanticSim stays null and the
+  // TF-cosine score is used unmodified.
   useEffect(() => {
-    if (!jd || !match) return
+    if (!cvText || !jdDescription) {
+      setSemanticSim(null)
+      return
+    }
+    setSemanticSim(undefined) // mark as in-flight
+    let cancelled = false
+    getSemanticSimilarity(cvText, jdDescription).then((sim) => {
+      if (!cancelled) setSemanticSim(sim)
+    })
+    return () => { cancelled = true }
+  }, [cvText, jdDescription])
+
+  // Final blended result: upgrade to semantic weights once the worker replies.
+  const match = useMemo(() => {
+    if (!baseMatch) return null
+    if (typeof semanticSim === 'number') return blendSemanticScore(baseMatch, semanticSim)
+    return baseMatch
+  }, [baseMatch, semanticSim])
+
+  // Persist match to history when a real extracted JD is matched.
+  // Only persist once semantic has resolved (or fallen back) to avoid saving
+  // a stale TF-only score that will be immediately superseded.
+  useEffect(() => {
+    if (!jd || !match || semanticSim === undefined) return
     void historyStorage.push({
       id: `${jd.url}-${jd.extractedAt}`,
       job: jd,
       match,
       savedAt: Date.now(),
     })
-  }, [jd, match])
+  }, [jd, match, semanticSim])
 
   // Spinner while loading welcome flag (avoids flash of welcome screen for returning users)
   if (welcomed === null) {
@@ -162,6 +192,8 @@ export default function App() {
                     score={match.score}
                     skillCoverage={match.skillCoverage}
                     keywordOverlap={match.keywordOverlap}
+                    semanticScore={match.semanticScore}
+                    semanticLoading={semanticSim === undefined}
                   />
                 </div>
                 <SkillGap matched={match.matchedSkills} missing={match.missingSkills} />

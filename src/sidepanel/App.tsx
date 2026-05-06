@@ -6,6 +6,7 @@ import SkillGap from './components/SkillGap'
 import History from './components/History'
 import SettingsDrawer from './components/SettingsDrawer'
 import Welcome from './components/Welcome'
+import CoverLetterDrawer from './components/CoverLetterDrawer'
 import { computeMatch } from '../lib/matching/match'
 import { cvStorage, historyStorage } from '../lib/storage'
 import type { JobPosting } from '../types/jobs'
@@ -32,6 +33,7 @@ export default function App() {
   const [manualJdText, setManualJdText] = useState('')
   const [tab, setTab] = useState<Tab>('match')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [coverLetterOpen, setCoverLetterOpen] = useState(false)
 
   // Check first-run state
   useEffect(() => {
@@ -165,6 +167,19 @@ export default function App() {
                   />
                 </div>
                 <SkillGap matched={match.matchedSkills} missing={match.missingSkills} />
+                {match.score > 0 && (
+                  <div className="border-t border-gray-800/60 px-4 py-3">
+                    <button
+                      onClick={() => setCoverLetterOpen(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-sky-800/60 bg-sky-950/40 px-4 py-2.5 text-sm font-semibold text-sky-300 transition-colors hover:border-sky-700 hover:bg-sky-900/40"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                      </svg>
+                      Draft cover letter
+                    </button>
+                  </div>
+                )}
               </>
             )}
 
@@ -186,6 +201,15 @@ export default function App() {
       </main>
 
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <CoverLetterDrawer
+        open={coverLetterOpen}
+        onClose={() => setCoverLetterOpen(false)}
+        cvText={cvText ?? ''}
+        jdText={jdDescription ?? ''}
+        jobTitle={jd?.title ?? ''}
+        company={jd?.company ?? ''}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
     </div>
   )
 }

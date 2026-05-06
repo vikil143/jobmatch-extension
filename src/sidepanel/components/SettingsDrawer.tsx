@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { exportAllData, importAllData, clearAllData } from '../../lib/storage'
+import { geminiKeyStorage } from '../../lib/coverLetter'
 
 interface Props {
   open: boolean
@@ -12,6 +13,30 @@ export default function SettingsDrawer({ open, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [message, setMessage] = useState('')
   const importRef = useRef<HTMLInputElement>(null)
+
+  // Gemini API key state
+  const [geminiKey, setGeminiKey] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [keyPhase, setKeyPhase] = useState<'idle' | 'saving' | 'saved' | 'cleared'>('idle')
+
+  useEffect(() => {
+    if (!open) return
+    void geminiKeyStorage.get().then((k) => setGeminiKey(k ?? ''))
+  }, [open])
+
+  async function handleSaveKey() {
+    setKeyPhase('saving')
+    await geminiKeyStorage.set(geminiKey.trim())
+    setKeyPhase('saved')
+    setTimeout(() => setKeyPhase('idle'), 2000)
+  }
+
+  async function handleClearKey() {
+    await geminiKeyStorage.clear()
+    setGeminiKey('')
+    setKeyPhase('cleared')
+    setTimeout(() => setKeyPhase('idle'), 2000)
+  }
 
   if (!open) return null
 
@@ -104,6 +129,62 @@ export default function SettingsDrawer({ open, onClose }: Props) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+          {/* AI — Gemini API key */}
+          <div className="space-y-3">
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-600">AI (Cover Letters)</h3>
+            <p className="text-xs text-gray-600">
+              Used only when Chrome's on-device AI is unavailable. Sent to Google's API only — never stored remotely by this extension.
+            </p>
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="AIza…"
+                  className="w-full rounded-lg border border-gray-800 bg-gray-900/60 px-3 py-2 pr-9 text-sm text-gray-200 placeholder:text-gray-700 outline-none focus:border-sky-700"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey((v) => !v)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400"
+                  tabIndex={-1}
+                  aria-label={showKey ? 'Hide key' : 'Show key'}
+                >
+                  {showKey ? (
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void handleSaveKey()}
+                  disabled={!geminiKey.trim() || keyPhase === 'saving'}
+                  className="flex-1 rounded-lg bg-sky-700/80 px-3 py-1.5 text-xs font-semibold text-sky-100 transition-colors hover:bg-sky-600 disabled:opacity-40"
+                >
+                  {keyPhase === 'saved' ? 'Saved!' : keyPhase === 'saving' ? 'Saving…' : 'Save key'}
+                </button>
+                {geminiKey && (
+                  <button
+                    onClick={() => void handleClearKey()}
+                    className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-500 transition-colors hover:border-gray-600 hover:text-gray-400"
+                  >
+                    {keyPhase === 'cleared' ? 'Cleared' : 'Clear'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Data management */}
           <div className="space-y-3">

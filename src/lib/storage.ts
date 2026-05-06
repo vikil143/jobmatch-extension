@@ -1,4 +1,4 @@
-import type { HistoryRecord } from '../types/jobs'
+import type { HistoryRecord, Profile } from '../types/jobs'
 
 export interface CvRecord {
   filename: string
@@ -9,6 +9,7 @@ export interface CvRecord {
 const CV_KEY = 'cv:default'
 const HISTORY_KEY = 'history:v1'
 const HISTORY_MAX = 20
+export const PROFILE_KEY = 'profile:v1'
 
 export const cvStorage = {
   async get(): Promise<CvRecord | null> {
@@ -22,6 +23,21 @@ export const cvStorage = {
 
   async clear(): Promise<void> {
     await chrome.storage.local.remove(CV_KEY)
+  },
+}
+
+export const profileStorage = {
+  async get(): Promise<Profile | null> {
+    const result = await chrome.storage.local.get(PROFILE_KEY)
+    return (result[PROFILE_KEY] as Profile) ?? null
+  },
+
+  async set(profile: Profile): Promise<void> {
+    await chrome.storage.local.set({ [PROFILE_KEY]: profile })
+  },
+
+  async clear(): Promise<void> {
+    await chrome.storage.local.remove(PROFILE_KEY)
   },
 }
 

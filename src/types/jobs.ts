@@ -22,3 +22,11 @@ export interface HistoryRecord {
   match: MatchResult
   savedAt: number
 }
+
+export interface Profile {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  linkedIn: string
+}

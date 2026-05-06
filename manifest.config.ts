@@ -9,6 +9,7 @@ export default defineManifest((env) => ({
   host_permissions: [
     'https://www.linkedin.com/*',
     'https://www.naukri.com/*',
+    'https://job-boards.greenhouse.io/*',
   ],
   action: {
     default_title: 'Open JobMatch',
@@ -32,6 +33,11 @@ export default defineManifest((env) => ({
         'https://www.naukri.com/*',
       ],
       js: ['src/content/index.ts'],
+      run_at: 'document_idle',
+    },
+    {
+      matches: ['https://job-boards.greenhouse.io/*'],
+      js: ['src/content/greenhouse.ts'],
       run_at: 'document_idle',
     },
   ],

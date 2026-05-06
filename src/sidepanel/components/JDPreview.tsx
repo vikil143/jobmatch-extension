@@ -54,10 +54,12 @@ export default function JDPreview({ jd, isLoading, onManualJd }: Props) {
             className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
               jd.site === 'linkedin'
                 ? 'bg-blue-900/40 text-blue-400'
+                : jd.site === 'indeed'
+                ? 'bg-indigo-900/40 text-indigo-400'
                 : 'bg-orange-900/40 text-orange-400'
             }`}
           >
-            {jd.site === 'linkedin' ? 'LinkedIn' : 'Naukri'}
+            {jd.site === 'linkedin' ? 'LinkedIn' : jd.site === 'indeed' ? 'Indeed' : 'Naukri'}
           </span>
         </div>
 
@@ -86,11 +88,12 @@ export default function JDPreview({ jd, isLoading, onManualJd }: Props) {
       <div className="space-y-1">
         <p className="text-sm font-medium text-gray-400">No job detected</p>
         <p className="text-xs leading-relaxed text-gray-600">
-          Open a job on LinkedIn or Naukri and it will appear here automatically.
+          Open a job on LinkedIn, Naukri, or Indeed and it will appear here automatically.
         </p>
       </div>
       <div className="rounded-lg border border-gray-800/60 bg-gray-900/30 px-3 py-2.5 space-y-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-700">Supported URLs</p>
+        <p className="font-mono text-[11px] text-gray-700">indeed.com/viewjob?jk=…</p>
         <p className="font-mono text-[11px] text-gray-700">linkedin.com/jobs/view/…</p>
         <p className="font-mono text-[11px] text-gray-700">naukri.com/job-listings-…</p>
       </div>

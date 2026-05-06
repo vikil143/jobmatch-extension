@@ -7,6 +7,7 @@ export default defineManifest((env) => ({
   description: 'AI-powered job matching for LinkedIn and Naukri',
   permissions: ['sidePanel', 'storage', 'tabs'],
   host_permissions: [
+    '*://*.indeed.com/*',
     'https://www.linkedin.com/*',
     'https://www.naukri.com/*',
   ],
@@ -28,6 +29,7 @@ export default defineManifest((env) => ({
   content_scripts: [
     {
       matches: [
+        '*://*.indeed.com/*',
         'https://www.linkedin.com/*',
         'https://www.naukri.com/*',
       ],

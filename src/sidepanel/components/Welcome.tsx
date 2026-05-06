@@ -11,7 +11,7 @@ const STEPS = [
   {
     number: '2',
     title: 'Open a job posting',
-    description: 'Browse to any job on LinkedIn or Naukri. We extract the details automatically.',
+    description: 'Browse to any job on LinkedIn, Naukri, or Indeed. We extract the details automatically.',
   },
   {
     number: '3',

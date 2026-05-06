@@ -1,5 +1,5 @@
 export interface JobPosting {
-  site: 'linkedin' | 'naukri'
+  site: 'indeed' | 'linkedin' | 'naukri'
   title: string
   company: string
   description: string

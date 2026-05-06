@@ -1,5 +1,15 @@
 # Architecture Decisions
 
+## Phase 6b — AI Provider Layer
+
+| # | Decision | Rationale |
+|---|---|---|
+| 11 | **No `@google/generative-ai` SDK** | Gemini streaming requires only SSE parsing over fetch. Adding the SDK would bundle ~200 KB for work we do in ~60 lines; raw fetch + TextDecoder is clearer and lighter |
+| 12 | **No LangChain / Vercel AI SDK** | Both providers have simple, well-defined streaming contracts; the abstraction would add more surface area than it removes |
+| 13 | **Cumulative-vs-delta detection in Prompt API** | Chrome's `promptStreaming` emits cumulative text in some versions and deltas in others with no flag to distinguish. We detect the mode at runtime by checking if the new chunk starts with accumulated output, then slice accordingly |
+| 14 | **`BLOCK_NONE` safety settings for Gemini** | Resume and JD content routinely triggers over-blocking on categories like harassment/dangerous-content when discussing job requirements. False positives on a personal productivity tool are worse than the (near-zero) risk |
+| 15 | **Priority order: Prompt API → Gemini** | On-device is faster, private, and free; Gemini is the fallback for machines without the model downloaded |
+
 ## Phase 1
 
 | # | Decision | Rationale |

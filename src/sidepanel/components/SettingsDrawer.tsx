@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { exportAllData, importAllData, clearAllData } from '../../lib/storage'
+import AISettings from './Settings'
 
 interface Props {
   open: boolean
@@ -104,6 +105,9 @@ export default function SettingsDrawer({ open, onClose }: Props) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+
+          {/* AI features */}
+          <AISettings />
 
           {/* Data management */}
           <div className="space-y-3">

@@ -49,7 +49,7 @@ export default function SkillGap({ matched, missing }: Props) {
   if (matched.length === 0 && missing.length === 0) return null
 
   return (
-    <div className="space-y-4 px-4 pb-6">
+    <div className="space-y-4 px-4 pt-4 pb-6">
       {missing.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">

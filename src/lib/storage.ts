@@ -1,3 +1,5 @@
+import type { HistoryRecord } from '../types/jobs'
+
 export interface CvRecord {
   filename: string
   text: string
@@ -5,6 +7,8 @@ export interface CvRecord {
 }
 
 const CV_KEY = 'cv:default'
+const HISTORY_KEY = 'history:v1'
+const HISTORY_MAX = 20
 
 export const cvStorage = {
   async get(): Promise<CvRecord | null> {
@@ -19,4 +23,37 @@ export const cvStorage = {
   async clear(): Promise<void> {
     await chrome.storage.local.remove(CV_KEY)
   },
+}
+
+export const historyStorage = {
+  async get(): Promise<HistoryRecord[]> {
+    const result = await chrome.storage.local.get(HISTORY_KEY)
+    return (result[HISTORY_KEY] as HistoryRecord[]) ?? []
+  },
+
+  async push(record: HistoryRecord): Promise<void> {
+    const existing = await historyStorage.get()
+    // Deduplicate by job URL — keep most recent
+    const deduped = existing.filter((r) => r.job.url !== record.job.url)
+    const updated = [record, ...deduped].slice(0, HISTORY_MAX)
+    await chrome.storage.local.set({ [HISTORY_KEY]: updated })
+  },
+
+  async clear(): Promise<void> {
+    await chrome.storage.local.remove(HISTORY_KEY)
+  },
+}
+
+export async function exportAllData(): Promise<Record<string, unknown>> {
+  const result = await chrome.storage.local.get(null)
+  return result
+}
+
+export async function importAllData(data: Record<string, unknown>): Promise<void> {
+  await chrome.storage.local.clear()
+  await chrome.storage.local.set(data)
+}
+
+export async function clearAllData(): Promise<void> {
+  await chrome.storage.local.clear()
 }

@@ -4,21 +4,19 @@ import type { JobPosting } from '../../types/jobs'
 interface Props {
   jd: JobPosting | null
   isLoading: boolean
+  onManualJd?: (text: string) => void
 }
 
 const TRUNCATE_AT = 300
-// Seconds before the manual-paste fallback appears when extraction returns null.
-const FALLBACK_DELAY_MS = 3000
+const FALLBACK_DELAY_MS = 4000
 
-export default function JDPreview({ jd, isLoading }: Props) {
+export default function JDPreview({ jd, isLoading, onManualJd }: Props) {
   const [showMore, setShowMore] = useState(false)
   const [showFallback, setShowFallback] = useState(false)
   const [manualText, setManualText] = useState('')
 
-  // Reset expand state when a new JD arrives.
   useEffect(() => { setShowMore(false) }, [jd])
 
-  // Show manual-paste textarea 3 s after component mounts with no JD.
   useEffect(() => {
     if (isLoading || jd !== null) {
       setShowFallback(false)
@@ -31,11 +29,15 @@ export default function JDPreview({ jd, isLoading }: Props) {
   if (isLoading) {
     return (
       <section className="p-4 border-b border-gray-800 space-y-3" aria-label="Loading job posting">
-        <div className="animate-pulse space-y-2">
-          <div className="h-3 w-24 rounded bg-gray-800" />
-          <div className="h-4 w-3/4 rounded bg-gray-800" />
-          <div className="h-3 w-1/2 rounded bg-gray-800" />
-          <div className="h-20 w-full rounded bg-gray-800" />
+        <div className="animate-pulse space-y-2.5">
+          <div className="h-2.5 w-16 rounded bg-gray-800" />
+          <div className="h-4 w-4/5 rounded bg-gray-800" />
+          <div className="h-3 w-2/5 rounded bg-gray-800" />
+          <div className="space-y-1.5 pt-1">
+            <div className="h-2.5 w-full rounded bg-gray-800" />
+            <div className="h-2.5 w-full rounded bg-gray-800" />
+            <div className="h-2.5 w-3/4 rounded bg-gray-800" />
+          </div>
         </div>
       </section>
     )
@@ -60,7 +62,7 @@ export default function JDPreview({ jd, isLoading }: Props) {
         </div>
 
         <h2 className="text-sm font-semibold leading-snug text-gray-100">{jd.title}</h2>
-        <p className="text-xs text-gray-400">{jd.company}</p>
+        <p className="text-xs text-gray-500">{jd.company}</p>
 
         <p className="text-xs leading-relaxed text-gray-500">
           {showMore ? jd.description : preview}
@@ -79,28 +81,34 @@ export default function JDPreview({ jd, isLoading }: Props) {
     )
   }
 
-  // Empty / fallback state
   return (
-    <section className="p-4 border-b border-gray-800 space-y-3">
-      <p className="text-sm text-gray-500">
-        Open a job posting on LinkedIn or Naukri to begin.
-      </p>
-      <ul className="space-y-0.5 text-[11px] text-gray-700">
-        <li>linkedin.com/jobs/view/…</li>
-        <li>naukri.com/job-listings-…</li>
-      </ul>
+    <section className="p-4 border-b border-gray-800 space-y-4">
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-gray-400">No job detected</p>
+        <p className="text-xs leading-relaxed text-gray-600">
+          Open a job on LinkedIn or Naukri and it will appear here automatically.
+        </p>
+      </div>
+      <div className="rounded-lg border border-gray-800/60 bg-gray-900/30 px-3 py-2.5 space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-700">Supported URLs</p>
+        <p className="font-mono text-[11px] text-gray-700">linkedin.com/jobs/view/…</p>
+        <p className="font-mono text-[11px] text-gray-700">naukri.com/job-listings-…</p>
+      </div>
 
       {showFallback && (
-        <div className="space-y-2 pt-1">
-          <p className="text-xs text-yellow-600">
-            Couldn't extract JD automatically — paste it below:
+        <div className="space-y-2">
+          <p className="text-xs text-amber-600/80">
+            Auto-extraction didn't work — paste the job description below:
           </p>
           <textarea
             value={manualText}
-            onChange={(e) => setManualText(e.target.value)}
+            onChange={(e) => {
+              setManualText(e.target.value)
+              onManualJd?.(e.target.value)
+            }}
             rows={6}
             placeholder="Paste job description here…"
-            className="w-full resize-none rounded border border-gray-700 bg-gray-900 p-2 text-xs text-gray-300 placeholder-gray-600 focus:border-gray-600 focus:outline-none"
+            className="w-full resize-none rounded-lg border border-gray-700 bg-gray-900 p-2.5 text-xs text-gray-300 placeholder-gray-700 focus:border-gray-600 focus:outline-none"
           />
         </div>
       )}

@@ -15,3 +15,10 @@ export interface MatchResult {
   missingSkills: string[]
   extraSkills: string[]
 }
+
+export interface HistoryRecord {
+  id: string
+  job: JobPosting
+  match: MatchResult
+  savedAt: number
+}

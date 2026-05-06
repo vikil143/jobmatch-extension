@@ -25,6 +25,25 @@ export interface HistoryRecord {
 
 export type ApplicationStatus = 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected'
 
+export interface BulletRewrite {
+  id: string
+  original: string
+  suggested: string
+  rationale: string
+}
+
+export interface TailoredResume {
+  generatedAt: number
+  provider: 'prompt-api' | 'gemini-api'
+  summary: string
+  bulletRewrites: BulletRewrite[]
+  emphasis: string[]
+  deemphasis: string[]
+  keywordsToWeaveIn: string[]
+  genuineGaps: string[]
+  userEdits: Record<string, string>
+}
+
 export interface ApplicationRecord {
   id: string
   title: string
@@ -34,4 +53,6 @@ export interface ApplicationRecord {
   status: ApplicationStatus
   movedAt: number
   createdAt: number
+  jobDescription?: string
+  tailoredResume?: TailoredResume
 }

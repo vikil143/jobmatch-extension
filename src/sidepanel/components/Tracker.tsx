@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { applicationStorage } from '../../lib/storage'
 import type { ApplicationRecord, ApplicationStatus } from '../../types/jobs'
+import TailoredResumePanel from './TailoredResumePanel'
 
 const COLUMNS: {
   key: ApplicationStatus
@@ -61,20 +62,105 @@ function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+// ---------------------------------------------------------------------------
+// Card detail view
+// ---------------------------------------------------------------------------
+
+const STATUS_COLORS: Record<ApplicationStatus, string> = {
+  saved: 'border-sky-700/50 text-sky-400 bg-sky-950/20',
+  applied: 'border-violet-700/50 text-violet-400 bg-violet-950/20',
+  interviewing: 'border-amber-700/50 text-amber-400 bg-amber-950/20',
+  offer: 'border-emerald-700/50 text-emerald-400 bg-emerald-950/20',
+  rejected: 'border-rose-700/50 text-rose-400 bg-rose-950/20',
+}
+
+interface CardDetailProps {
+  record: ApplicationRecord
+  onBack: () => void
+}
+
+function CardDetail({ record, onBack }: CardDetailProps) {
+  return (
+    <div className="flex flex-col min-h-0 flex-1">
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b border-gray-800 px-3 py-2.5">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 rounded p-1 text-gray-600 transition-colors hover:bg-gray-800 hover:text-gray-300"
+          aria-label="Back to tracker"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-[10px] font-medium">Back</span>
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="truncate text-[11px] font-semibold text-gray-100">{record.title}</p>
+          <p className="truncate text-[10px] text-gray-600">{record.company}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {record.matchScore != null && (
+            <span className={`font-mono text-[11px] font-bold ${scoreColor(record.matchScore)}`}>
+              {record.matchScore}
+            </span>
+          )}
+          <span
+            className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${STATUS_COLORS[record.status]}`}
+          >
+            {record.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Meta row */}
+      <div className="flex items-center gap-3 border-b border-gray-800/60 px-3 py-1.5">
+        {record.url && (
+          <a
+            href={record.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[10px] text-gray-600 transition-colors hover:text-sky-400"
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Open job
+          </a>
+        )}
+        <span className="text-[10px] text-gray-700">Added {formatDate(record.createdAt)}</span>
+        {!record.jobDescription && (
+          <span className="text-[10px] text-amber-700">No JD stored — re-save from Match tab</span>
+        )}
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <TailoredResumePanel record={record} />
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Kanban card
+// ---------------------------------------------------------------------------
+
 interface CardProps {
   record: ApplicationRecord
   onDragStart: () => void
   onDragEnd: () => void
   onDelete: () => void
+  onOpen: () => void
 }
 
-function AppCard({ record, onDragStart, onDragEnd, onDelete }: CardProps) {
+function AppCard({ record, onDragStart, onDragEnd, onDelete, onOpen }: CardProps) {
   return (
     <div
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className="group relative cursor-grab select-none rounded-lg border border-gray-800/60 bg-gray-900 p-3 active:cursor-grabbing active:opacity-50"
+      onClick={onOpen}
+      className="group relative cursor-pointer select-none rounded-lg border border-gray-800/60 bg-gray-900 p-3 active:cursor-grabbing active:opacity-50 hover:border-gray-700/60"
     >
       <button
         onPointerDown={(e) => e.stopPropagation()}
@@ -96,21 +182,31 @@ function AppCard({ record, onDragStart, onDragEnd, onDelete }: CardProps) {
         <p className="truncate text-[10px] text-gray-500">{record.company}</p>
         <div className="flex items-center justify-between pt-0.5">
           <span className="text-[10px] text-gray-700">{formatDate(record.movedAt)}</span>
-          {record.matchScore != null && (
-            <span className={`font-mono text-[11px] font-bold ${scoreColor(record.matchScore)}`}>
-              {record.matchScore}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {record.tailoredResume && (
+              <span className="text-[9px] text-violet-600" title="Has tailored resume">✦</span>
+            )}
+            {record.matchScore != null && (
+              <span className={`font-mono text-[11px] font-bold ${scoreColor(record.matchScore)}`}>
+                {record.matchScore}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
+// ---------------------------------------------------------------------------
+// Tracker
+// ---------------------------------------------------------------------------
+
 export default function Tracker() {
   const [records, setRecords] = useState<ApplicationRecord[]>([])
   const [loaded, setLoaded] = useState(false)
   const [dragOver, setDragOver] = useState<ApplicationStatus | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const dragId = useRef<string | null>(null)
 
   useEffect(() => {
@@ -137,6 +233,20 @@ export default function Tracker() {
     dragId.current = null
     setDragOver(null)
     if (id) await applicationStorage.move(id, targetStatus)
+  }
+
+  // Detail view
+  if (selectedId) {
+    const record = records.find((r) => r.id === selectedId)
+    if (record) {
+      return (
+        <div className="flex flex-col" style={{ minHeight: 'calc(100vh - 88px)' }}>
+          <CardDetail record={record} onBack={() => setSelectedId(null)} />
+        </div>
+      )
+    }
+    // Record was deleted while detail was open
+    setSelectedId(null)
   }
 
   if (!loaded) {
@@ -234,6 +344,7 @@ export default function Tracker() {
                       setDragOver(null)
                     }}
                     onDelete={() => void applicationStorage.remove(record.id)}
+                    onOpen={() => setSelectedId(record.id)}
                   />
                 ))}
               </div>

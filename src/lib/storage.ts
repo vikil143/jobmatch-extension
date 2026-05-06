@@ -68,6 +68,12 @@ export const applicationStorage = {
     await chrome.storage.local.set({ [APP_KEY]: updated })
   },
 
+  async update(id: string, patch: Partial<ApplicationRecord>): Promise<void> {
+    const existing = await applicationStorage.get()
+    const updated = existing.map((r) => (r.id === id ? { ...r, ...patch } : r))
+    await chrome.storage.local.set({ [APP_KEY]: updated })
+  },
+
   async remove(id: string): Promise<void> {
     const existing = await applicationStorage.get()
     await chrome.storage.local.set({ [APP_KEY]: existing.filter((r) => r.id !== id) })

@@ -105,6 +105,7 @@ export default function App() {
       status: 'saved',
       movedAt: Date.now(),
       createdAt: Date.now(),
+      jobDescription: jd.description,
     }
     await applicationStorage.upsert(record)
     setSavedToTracker(true)

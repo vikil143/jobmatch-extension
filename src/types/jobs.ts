@@ -25,6 +25,26 @@ export interface HistoryRecord {
 
 export type ApplicationStatus = 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected'
 
+export type CoverLetterTone = 'professional' | 'conversational' | 'enthusiastic'
+export type CoverLetterLength = 'short' | 'medium' | 'long'
+
+export interface CoverLetter {
+  generatedAt: number
+  provider: 'prompt-api' | 'gemini-api'
+  tone: CoverLetterTone
+  length: CoverLetterLength
+  content: string
+  userEdits: string | null
+}
+
+export interface UserProfile {
+  fullName: string
+  preferredName: string
+  cityCountry: string
+  linkedinUrl: string
+  githubUrl: string
+}
+
 export interface BulletRewrite {
   id: string
   original: string
@@ -55,4 +75,5 @@ export interface ApplicationRecord {
   createdAt: number
   jobDescription?: string
   tailoredResume?: TailoredResume
+  coverLetter?: CoverLetter
 }

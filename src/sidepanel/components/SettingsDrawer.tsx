@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { exportAllData, importAllData, clearAllData } from '../../lib/storage'
 import AISettings from './Settings'
+import ProfileSettings from './ProfileSettings'
 
 interface Props {
   open: boolean
@@ -108,6 +109,9 @@ export default function SettingsDrawer({ open, onClose }: Props) {
 
           {/* AI features */}
           <AISettings />
+
+          {/* Profile */}
+          <ProfileSettings />
 
           {/* Data management */}
           <div className="space-y-3">

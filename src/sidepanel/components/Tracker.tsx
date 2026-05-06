@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { applicationStorage } from '../../lib/storage'
 import type { ApplicationRecord, ApplicationStatus } from '../../types/jobs'
 import TailoredResumePanel from './TailoredResumePanel'
+import CoverLetterPanel from './CoverLetterPanel'
 
 const COLUMNS: {
   key: ApplicationStatus
@@ -136,6 +137,7 @@ function CardDetail({ record, onBack }: CardDetailProps) {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <TailoredResumePanel record={record} />
+        <CoverLetterPanel record={record} />
       </div>
     </div>
   )

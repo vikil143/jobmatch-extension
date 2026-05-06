@@ -1,19 +1,20 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import CVUpload from './components/CVUpload'
 import JDPreview from './components/JDPreview'
 import MatchScore from './components/MatchScore'
 import SkillGap from './components/SkillGap'
 import History from './components/History'
+import Tracker from './components/Tracker'
 import SettingsDrawer from './components/SettingsDrawer'
 import Welcome from './components/Welcome'
 import { computeMatch } from '../lib/matching/match'
-import { cvStorage, historyStorage } from '../lib/storage'
-import type { JobPosting } from '../types/jobs'
+import { cvStorage, historyStorage, applicationStorage } from '../lib/storage'
+import type { ApplicationRecord, JobPosting } from '../types/jobs'
 import type { ExtensionMessage } from '../types/messages'
 
 const WELCOME_KEY = 'ui:welcomed'
 
-type Tab = 'match' | 'history'
+type Tab = 'match' | 'history' | 'tracker'
 
 function GearIcon() {
   return (
@@ -32,6 +33,8 @@ export default function App() {
   const [manualJdText, setManualJdText] = useState('')
   const [tab, setTab] = useState<Tab>('match')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [savedToTracker, setSavedToTracker] = useState(false)
+  const trackerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check first-run state
   useEffect(() => {
@@ -88,6 +91,27 @@ export default function App() {
     return computeMatch(cvText, jdDescription)
   }, [cvText, jdDescription])
 
+  // Reset tracker saved state when a new JD arrives
+  useEffect(() => { setSavedToTracker(false) }, [jd])
+
+  async function saveToTracker() {
+    if (!jd) return
+    const record: ApplicationRecord = {
+      id: jd.url,
+      title: jd.title,
+      company: jd.company,
+      matchScore: match?.score,
+      url: jd.url,
+      status: 'saved',
+      movedAt: Date.now(),
+      createdAt: Date.now(),
+    }
+    await applicationStorage.upsert(record)
+    setSavedToTracker(true)
+    if (trackerTimer.current) clearTimeout(trackerTimer.current)
+    trackerTimer.current = setTimeout(() => setSavedToTracker(false), 2000)
+  }
+
   // Persist match to history when a real extracted JD is matched
   useEffect(() => {
     if (!jd || !match) return
@@ -130,7 +154,7 @@ export default function App() {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-800">
-        {(['match', 'history'] as Tab[]).map((t) => (
+        {(['match', 'history', 'tracker'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -154,6 +178,35 @@ export default function App() {
               isLoading={isLoading}
               onManualJd={setManualJdText}
             />
+
+            {jd && (
+              <div className="border-b border-gray-800/60 px-4 py-2">
+                <button
+                  onClick={() => void saveToTracker()}
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-lg border py-1.5 text-xs font-medium transition-colors ${
+                    savedToTracker
+                      ? 'border-emerald-700/50 text-emerald-400'
+                      : 'border-gray-700/60 text-gray-500 hover:border-sky-700/60 hover:text-sky-400'
+                  }`}
+                >
+                  {savedToTracker ? (
+                    <>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Saved to Tracker
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                      </svg>
+                      Track this job
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {match && (
               <>
@@ -180,8 +233,10 @@ export default function App() {
               <CVUpload />
             </div>
           </>
-        ) : (
+        ) : tab === 'history' ? (
           <History />
+        ) : (
+          <Tracker />
         )}
       </main>
 

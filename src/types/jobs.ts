@@ -22,3 +22,16 @@ export interface HistoryRecord {
   match: MatchResult
   savedAt: number
 }
+
+export type ApplicationStatus = 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected'
+
+export interface ApplicationRecord {
+  id: string
+  title: string
+  company: string
+  matchScore?: number
+  url?: string
+  status: ApplicationStatus
+  movedAt: number
+  createdAt: number
+}
